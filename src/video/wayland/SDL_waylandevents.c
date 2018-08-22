@@ -64,6 +64,7 @@ Wayland_PumpEvents(_THIS)
     SDL_VideoData *d = _this->driverdata;
     struct pollfd pfd[1];
 
+    WAYLAND_wl_display_flush(d->display);
     pfd[0].fd = WAYLAND_wl_display_get_fd(d->display);
     pfd[0].events = POLLIN;
     poll(pfd, 1, 0);
