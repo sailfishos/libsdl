@@ -1,0 +1,83 @@
+diff --git a/src/video/wayland/SDL_waylandvideo.c b/src/video/wayland/SDL_waylandvideo.c
+index b6155e76d9..c4d4f650c9 100644
+--- a/src/video/wayland/SDL_waylandvideo.c
++++ b/src/video/wayland/SDL_waylandvideo.c
+@@ -221,9 +217,34 @@ display_handle_geometry(void *data,
+ 
+ {
+     SDL_VideoDisplay *display = data;
++    SDL_DisplayOrientation orientation = SDL_ORIENTATION_UNKNOWN;
++    SDL_bool is_portrait = physical_height > physical_width;
++
++    // First geometry handling, assign name and driverdata
++    if (display->driverdata != output) {
++        SDL_free(display->name);
++        display->name = SDL_strdup(model);
++        display->driverdata = output;
++    }
+ 
+-    display->name = SDL_strdup(model);
+-    display->driverdata = output;
++    // Send orientation information
++    switch (transform) {
++    case WL_OUTPUT_TRANSFORM_NORMAL:
++        orientation = is_portrait ? SDL_ORIENTATION_PORTRAIT : SDL_ORIENTATION_LANDSCAPE;
++        break;
++    case WL_OUTPUT_TRANSFORM_90:
++        orientation = is_portrait ? SDL_ORIENTATION_LANDSCAPE_FLIPPED : SDL_ORIENTATION_PORTRAIT_FLIPPED;
++        break;
++    case WL_OUTPUT_TRANSFORM_180:
++        orientation = is_portrait ? SDL_ORIENTATION_PORTRAIT_FLIPPED :  SDL_ORIENTATION_LANDSCAPE_FLIPPED;
++        break;
++    case WL_OUTPUT_TRANSFORM_270:
++        orientation = is_portrait ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
++        break;
++    default:
++        break;
++    }
++    SDL_SendDisplayEvent(display, SDL_DISPLAYEVENT_ORIENTATION, orientation);
+ }
+ 
+ static void
+@@ -255,10 +278,6 @@ static void
+ display_handle_done(void *data,
+                     struct wl_output *output)
+ {
+-    SDL_VideoDisplay *display = data;
+-    SDL_AddVideoDisplay(display);
+-    SDL_free(display->name);
+-    SDL_free(display);
+ }
+ 
+ static void
+@@ -279,22 +298,22 @@ static const struct wl_output_listener output_listener = {
+ static void
+ Wayland_add_display(SDL_VideoData *d, uint32_t id)
+ {
++    int index;
+     struct wl_output *output;
+-    SDL_VideoDisplay *display = SDL_malloc(sizeof *display);
+-    if (!display) {
+-        SDL_OutOfMemory();
+-        return;
+-    }
+-    SDL_zero(*display);
++    SDL_VideoDisplay display;
++    SDL_zero(display);
+ 
+     output = wl_registry_bind(d->registry, id, &wl_output_interface, 2);
+     if (!output) {
+         SDL_SetError("Failed to retrieve output.");
+-        SDL_free(display);
+         return;
+     }
++    index = SDL_AddVideoDisplay(&display);
+ 
+-    wl_output_add_listener(output, &output_listener, display);
++    if (index != -1) {
++        // Use the display pointer to already added display as data
++        wl_output_add_listener(output, &output_listener, SDL_GetDisplay(index));
++    }
+ }
+ 
+ #ifdef SDL_VIDEO_DRIVER_WAYLAND_QT_TOUCH

@@ -1,7 +1,7 @@
 Summary: Simple DirectMedia Layer 2
 Name: SDL2
-Version: 2.0.3
-Release: 2
+Version: 2.0.9
+Release: 1
 Source: http://www.libsdl.org/release/%{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
 License: zlib
@@ -9,12 +9,16 @@ Group: System/GUI/Other
 BuildRequires: pkgconfig(wayland-egl)
 BuildRequires: pkgconfig(wayland-client)
 BuildRequires: pkgconfig(wayland-cursor)
+BuildRequires: pkgconfig(wayland-protocols)
+BuildRequires: pkgconfig(wayland-scanner)
 BuildRequires: pkgconfig(egl)
 BuildRequires: pkgconfig(glesv1_cm)
 BuildRequires: pkgconfig(glesv2)
 BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
+Patch0: sdl2-disable-clipboard.patch
+Patch1: sdl2-add-support-for-orientation-in-wayland.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
@@ -36,11 +40,13 @@ to develop SDL applications.
 
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{version}/%{name}
+%patch0 -p1
+%patch1 -p1
 
 %build
-%configure --disable-video-x11 --enable-video-wayland --enable-pulseaudio
-make
+%configure CFLAGS='-std=c99' --disable-video-x11 --enable-video-wayland --enable-pulseaudio
+make %{?_smp_mflags}
 
 %install
 %make_install
@@ -53,14 +59,13 @@ make
 
 %files
 %defattr(-,root,root,-)
-%doc BUGS.txt COPYING.txt CREDITS.txt README-SDL.txt README.txt TODO.txt WhatsNew.txt
 %{_libdir}/lib*.so.*
 
 %files devel
 %defattr(-,root,root,-)
-%doc BUGS.txt COPYING.txt CREDITS.txt INSTALL.txt README-gesture.txt README-hg.txt README-linux.txt README-platforms.txt README-porting.txt README-SDL.txt README-touch.txt README.txt TODO.txt WhatsNew.txt
 %{_bindir}/*-config
 %{_libdir}/lib*.so
+%{_libdir}/cmake/SDL2/*.cmake
 %{_includedir}/*/*.h
 %{_libdir}/pkgconfig/*
 %{_datadir}/aclocal/*
