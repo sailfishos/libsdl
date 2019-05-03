@@ -19,6 +19,7 @@ BuildRequires: pkgconfig(libpulse-simple)
 
 Patch0: sdl2-disable-clipboard.patch
 Patch1: sdl2-add-support-for-orientation-in-wayland.patch
+Patch2: sdl2-dont-force-x11-egl.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
@@ -43,6 +44,7 @@ to develop SDL applications.
 %setup -q -n %{name}-%{version}/%{name}
 %patch0 -p1
 %patch1 -p1
+%patch2 -p1
 
 %build
 %configure CFLAGS='-std=c99' --disable-video-x11 --enable-video-wayland --enable-pulseaudio
