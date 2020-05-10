@@ -1,11 +1,10 @@
 Summary: Simple DirectMedia Layer 2
 Name: SDL2
-Version: 2.0.9
+Version: 2.0.12
 Release: 1
 Source: http://www.libsdl.org/release/%{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
 License: zlib
-Group: System/GUI/Other
 BuildRequires: pkgconfig(wayland-egl)
 BuildRequires: pkgconfig(wayland-client)
 BuildRequires: pkgconfig(wayland-cursor)
@@ -17,9 +16,8 @@ BuildRequires: pkgconfig(glesv2)
 BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
-Patch0: sdl2-disable-clipboard.patch
-Patch1: sdl2-add-support-for-orientation-in-wayland.patch
-Patch2: sdl2-dont-force-x11-egl.patch
+Patch0: sdl2-add-support-for-orientation-in-wayland.patch
+Patch1: sdl2-wayland-input-fix.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
@@ -28,7 +26,6 @@ multiple platforms.
 
 %package devel
 Summary: Simple DirectMedia Layer 2 - Development libraries
-Group: Development/Libraries
 Requires: %{name} = %{version}
 
 %description devel
@@ -41,10 +38,7 @@ to develop SDL applications.
 
 
 %prep
-%setup -q -n %{name}-%{version}/%{name}
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
+%autosetup -p1 -n %{name}-%{version}/%{name}
 
 %build
 %configure CFLAGS='-std=c99' --disable-video-x11 --enable-video-wayland --enable-pulseaudio
