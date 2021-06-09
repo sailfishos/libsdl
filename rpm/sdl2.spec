@@ -17,6 +17,8 @@ BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
 Patch0: sdl2-add-support-for-orientation-in-wayland.patch
+Patch1: Fixed-bug-5451-Can-t-create-EGLSurface-in-Wayland.patch
+Patch2: sdl2-getDisplayDPI-on-wayland.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
