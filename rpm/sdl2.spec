@@ -1,10 +1,11 @@
 Summary: Simple DirectMedia Layer 2
 Name: SDL2
-Version: 2.0.14
+Version: 2.0.16
 Release: 1
-Source: http://www.libsdl.org/release/%{name}-%{version}.tar.gz
+Source: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
 License: zlib
+BuildRequires: cmake
 BuildRequires: pkgconfig(wayland-egl)
 BuildRequires: pkgconfig(wayland-client)
 BuildRequires: pkgconfig(wayland-cursor)
@@ -16,9 +17,7 @@ BuildRequires: pkgconfig(glesv2)
 BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
-Patch0: sdl2-add-support-for-orientation-in-wayland.patch
-Patch1: Fixed-bug-5451-Can-t-create-EGLSurface-in-Wayland.patch
-Patch2: sdl2-getDisplayDPI-on-wayland.patch
+Patch0: 0001-wayland-Bring-back-wl_shell-support.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
@@ -42,11 +41,20 @@ to develop SDL applications.
 %autosetup -p1 -n %{name}-%{version}/%{name}
 
 %build
-%configure CFLAGS='-std=c99' --disable-video-x11 --enable-video-wayland --enable-pulseaudio
-%make_build
+mkdir -p build
+pushd build
+%cmake .. \
+  -DLIB_SUFFIX="" \
+  -DPULSEAUDIO=ON \
+  -DVIDEO_WAYLAND=ON \
+  -DVIDEO_X11=OFF \
+  -DWAYLAND_LIBDECOR=OFF
+popd
 
 %install
+pushd build
 %make_install
+popd
 
 %post
 /sbin/ldconfig
@@ -56,6 +64,7 @@ to develop SDL applications.
 
 %files
 %defattr(-,root,root,-)
+%license LICENSE.txt
 %{_libdir}/lib*.so.*
 
 %files devel
