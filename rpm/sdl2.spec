@@ -1,6 +1,9 @@
+# cmake of SDL requires static libs to exist
+%define keepstatic 1
+
 Summary: Simple DirectMedia Layer 2
 Name: SDL2
-Version: 2.0.18
+Version: 2.24.0
 Release: 1
 Source: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
@@ -46,6 +49,7 @@ pushd build
 %cmake .. \
   -DLIB_SUFFIX="" \
   -DPULSEAUDIO=ON \
+  -DSDL_STATIC=ON \
   -DVIDEO_WAYLAND=ON \
   -DVIDEO_X11=OFF \
   -DWAYLAND_LIBDECOR=OFF
@@ -54,6 +58,7 @@ popd
 %install
 pushd build
 %make_install
+rm -f %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.txt
 popd
 
 %post
@@ -70,8 +75,9 @@ popd
 %files devel
 %defattr(-,root,root,-)
 %{_bindir}/*-config
+%{_libdir}/lib*.a
 %{_libdir}/lib*.so
-%{_libdir}/cmake/SDL2/*.cmake
+%{_libdir}/cmake/%{name}/*.cmake
 %{_includedir}/*/*.h
 %{_libdir}/pkgconfig/*
 %{_datadir}/aclocal/*
