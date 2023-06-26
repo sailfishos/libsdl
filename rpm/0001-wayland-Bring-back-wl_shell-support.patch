@@ -8,14 +8,14 @@ Subject: [PATCH] wayland: Bring back wl_shell support
  src/video/wayland/SDL_waylanddyn.h    |  2 +
  src/video/wayland/SDL_waylandevents.c |  8 +++
  src/video/wayland/SDL_waylandsym.h    |  2 +
- src/video/wayland/SDL_waylandvideo.c  |  5 ++
+ src/video/wayland/SDL_waylandvideo.c  |  7 ++
  src/video/wayland/SDL_waylandvideo.h  |  1 +
  src/video/wayland/SDL_waylandwindow.c | 95 +++++++++++++++++++++++++++
  src/video/wayland/SDL_waylandwindow.h |  1 +
- 8 files changed, 115 insertions(+), 1 deletion(-)
+ 8 files changed, 117 insertions(+), 1 deletion(-)
 
 diff --git a/include/SDL_syswm.h b/include/SDL_syswm.h
-index 45f8e7540d4fdc99a4d2c96356131b887d230c0b..4b2c797814aaa30e3d3978e6be986d8b4e259ab8 100644
+index b35734deb334508c6fbfcc0b635417a9d2841052..8d03637a9f34dedf40eda1aa35108898818af3a0 100644
 --- a/include/SDL_syswm.h
 +++ b/include/SDL_syswm.h
 @@ -294,7 +294,7 @@ struct SDL_SysWMinfo
@@ -28,54 +28,54 @@ index 45f8e7540d4fdc99a4d2c96356131b887d230c0b..4b2c797814aaa30e3d3978e6be986d8b
              struct xdg_surface *xdg_surface;        /**< Wayland xdg surface (window manager handle) */
              struct xdg_toplevel *xdg_toplevel;      /**< Wayland xdg toplevel role */
 diff --git a/src/video/wayland/SDL_waylanddyn.h b/src/video/wayland/SDL_waylanddyn.h
-index 43a3372d65009ef79405903e08899e0613b94cb2..c53496b0b8ab353a713d0248a587243470324fc9 100644
+index 9c400f4bdec37f3b2a999d7e07c8233db32b0c91..0ebb42a159be57c0ff2bd9940ae8af9369f1bddb 100644
 --- a/src/video/wayland/SDL_waylanddyn.h
 +++ b/src/video/wayland/SDL_waylanddyn.h
-@@ -108,11 +108,13 @@ void SDL_WAYLAND_UnloadSymbols(void);
- #define wl_shm_pool_interface (*WAYLAND_wl_shm_pool_interface)
- #define wl_buffer_interface (*WAYLAND_wl_buffer_interface)
- #define wl_registry_interface (*WAYLAND_wl_registry_interface)
-+#define wl_shell_surface_interface (*WAYLAND_wl_shell_surface_interface)
- #define wl_region_interface (*WAYLAND_wl_region_interface)
- #define wl_pointer_interface (*WAYLAND_wl_pointer_interface)
- #define wl_keyboard_interface (*WAYLAND_wl_keyboard_interface)
- #define wl_compositor_interface (*WAYLAND_wl_compositor_interface)
- #define wl_output_interface (*WAYLAND_wl_output_interface)
-+#define wl_shell_interface (*WAYLAND_wl_shell_interface)
- #define wl_shm_interface (*WAYLAND_wl_shm_interface)
- #define wl_data_device_interface (*WAYLAND_wl_data_device_interface)
- #define wl_data_offer_interface (*WAYLAND_wl_data_offer_interface)
+@@ -111,11 +111,13 @@ void SDL_WAYLAND_UnloadSymbols(void);
+ #define wl_shm_pool_interface            (*WAYLAND_wl_shm_pool_interface)
+ #define wl_buffer_interface              (*WAYLAND_wl_buffer_interface)
+ #define wl_registry_interface            (*WAYLAND_wl_registry_interface)
++#define wl_shell_surface_interface       (*WAYLAND_wl_shell_surface_interface)
+ #define wl_region_interface              (*WAYLAND_wl_region_interface)
+ #define wl_pointer_interface             (*WAYLAND_wl_pointer_interface)
+ #define wl_keyboard_interface            (*WAYLAND_wl_keyboard_interface)
+ #define wl_compositor_interface          (*WAYLAND_wl_compositor_interface)
+ #define wl_output_interface              (*WAYLAND_wl_output_interface)
++#define wl_shell_interface               (*WAYLAND_wl_shell_interface)
+ #define wl_shm_interface                 (*WAYLAND_wl_shm_interface)
+ #define wl_data_device_interface         (*WAYLAND_wl_data_device_interface)
+ #define wl_data_offer_interface          (*WAYLAND_wl_data_offer_interface)
 diff --git a/src/video/wayland/SDL_waylandevents.c b/src/video/wayland/SDL_waylandevents.c
-index 14a28430c983eea3a7e70da5dd5068e8313a1676..083187ab5f7d0a72f20c528a14c33c6e4bf1569e 100644
+index 1201781e466937a89df4bdba19396d6f144e123f..e7190945df8f1fa73d3cbcf31f6119a79599737d 100644
 --- a/src/video/wayland/SDL_waylandevents.c
 +++ b/src/video/wayland/SDL_waylandevents.c
-@@ -502,6 +502,10 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
-                                           input->seat,
-                                           serial);
-                     }
-+                } else {
-+                    if (window_data->shell_surface.wl) {
-+                        wl_shell_surface_move(window_data->shell_surface.wl, input->seat, serial);
-+                    }
+@@ -498,6 +498,10 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
+                                       input->seat,
+                                       serial);
                  }
-                 return SDL_TRUE;
++            } else {
++                if (window_data->shell_surface.wl) {
++                    wl_shell_surface_move(window_data->shell_surface.wl, input->seat, serial);
++                }
+             }
+             return SDL_TRUE;
  
-@@ -527,6 +531,10 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
-                                             serial,
-                                             directions[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
-                     }
-+                } else {
-+                    if (window_data->shell_surface.wl) {
-+                        wl_shell_surface_resize(window_data->shell_surface.wl, input->seat, serial, directions[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
-+                    }
+@@ -523,6 +527,10 @@ ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
+                                         serial,
+                                         directions[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
                  }
-                 return SDL_TRUE;
++            } else {
++                if (window_data->shell_surface.wl) {
++                    wl_shell_surface_resize(window_data->shell_surface.wl, input->seat, serial, directions[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
++                }
+             }
+             return SDL_TRUE;
  
 diff --git a/src/video/wayland/SDL_waylandsym.h b/src/video/wayland/SDL_waylandsym.h
-index 0473fa1b179d2f18b456347d88ca7729d0ce9fb3..12eca4237aa2da547665f56c6dcc948b35c3684a 100644
+index 7864edaa01507b034a987af35fb3127ab216a6c3..84b41ca820f880c3c85fe8957f33ca85f274942d 100644
 --- a/src/video/wayland/SDL_waylandsym.h
 +++ b/src/video/wayland/SDL_waylandsym.h
-@@ -91,11 +91,13 @@ SDL_WAYLAND_INTERFACE(wl_surface_interface)
+@@ -101,11 +101,13 @@ SDL_WAYLAND_INTERFACE(wl_surface_interface)
  SDL_WAYLAND_INTERFACE(wl_shm_pool_interface)
  SDL_WAYLAND_INTERFACE(wl_buffer_interface)
  SDL_WAYLAND_INTERFACE(wl_registry_interface)
@@ -90,10 +90,10 @@ index 0473fa1b179d2f18b456347d88ca7729d0ce9fb3..12eca4237aa2da547665f56c6dcc948b
  SDL_WAYLAND_INTERFACE(wl_data_device_interface)
  SDL_WAYLAND_INTERFACE(wl_data_source_interface)
 diff --git a/src/video/wayland/SDL_waylandvideo.c b/src/video/wayland/SDL_waylandvideo.c
-index 4642c0d8bf9cd3f6cb482e410bbd505ef1881c64..0ac82aec210ca2dafe4259dcc85a432bf168ed08 100644
+index b91897ff8b684f654b296ccd4c17508899fd0ea8..b13eb9361d007614b92fc07e8624cc46498da47c 100644
 --- a/src/video/wayland/SDL_waylandvideo.c
 +++ b/src/video/wayland/SDL_waylandvideo.c
-@@ -853,6 +853,8 @@ display_handle_global(void *data, struct wl_registry *registry, uint32_t id,
+@@ -819,6 +819,8 @@ display_handle_global(void *data, struct wl_registry *registry, uint32_t id,
      } else if (SDL_strcmp(interface, "xdg_wm_base") == 0) {
          d->shell.xdg = wl_registry_bind(d->registry, id, &xdg_wm_base_interface, SDL_min(version, 3));
          xdg_wm_base_add_listener(d->shell.xdg, &shell_listener_xdg, NULL);
@@ -102,33 +102,35 @@ index 4642c0d8bf9cd3f6cb482e410bbd505ef1881c64..0ac82aec210ca2dafe4259dcc85a432b
      } else if (SDL_strcmp(interface, "wl_shm") == 0) {
          d->shm = wl_registry_bind(registry, id, &wl_shm_interface, 1);
      } else if (SDL_strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) {
-@@ -1087,6 +1089,9 @@ Wayland_VideoQuit(_THIS)
-     if (data->shm)
-         wl_shm_destroy(data->shm);
+@@ -1072,6 +1074,11 @@ Wayland_VideoCleanup(_THIS)
+         data->shm = NULL;
+     }
  
-+    if (data->shell.wl)
++    if (data->shell.wl) {
 +        wl_shell_destroy(data->shell.wl);
++        data->shell.wl = NULL;
++    }
 +
-     if (data->shell.xdg)
+     if (data->shell.xdg) {
          xdg_wm_base_destroy(data->shell.xdg);
- 
+         data->shell.xdg = NULL;
 diff --git a/src/video/wayland/SDL_waylandvideo.h b/src/video/wayland/SDL_waylandvideo.h
-index 9b2d6835f29b815c2d41a994822738e0e066456b..227da25fbbcb2f84b23970e3e195d0a9bccb1d5b 100644
+index f2ca6c7ca7f276c785fa7a7a71022d3fbad2767d..c3717b3097cf8e514bdc064acc3b442fd4bd76f5 100644
 --- a/src/video/wayland/SDL_waylandvideo.h
 +++ b/src/video/wayland/SDL_waylandvideo.h
-@@ -61,6 +61,7 @@ typedef struct {
-     struct wl_pointer *pointer;
-     struct {
+@@ -64,6 +64,7 @@ typedef struct {
+     struct
+     {
          struct xdg_wm_base *xdg;
 +        struct wl_shell *wl;
  #ifdef HAVE_LIBDECOR_H
          struct libdecor *libdecor;
  #endif
 diff --git a/src/video/wayland/SDL_waylandwindow.c b/src/video/wayland/SDL_waylandwindow.c
-index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b78257300 100644
+index 5927967a8156f9af085c7f19b33fcb66b59eb2f3..92f25b8235460b0677ed6c584babfbae9e2db52f 100644
 --- a/src/video/wayland/SDL_waylandwindow.c
 +++ b/src/video/wayland/SDL_waylandwindow.c
-@@ -445,6 +445,20 @@ SetFullscreen(SDL_Window *window, struct wl_output *output, SDL_bool commit)
+@@ -441,6 +441,20 @@ SetFullscreen(SDL_Window *window, struct wl_output *output)
          } else {
              xdg_toplevel_unset_fullscreen(wind->shell_surface.xdg.roleobj.toplevel);
          }
@@ -136,9 +138,9 @@ index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b
 +        if (wind->shell_surface.wl == NULL) {
 +            return; /* Can't do anything yet, wait for ShowWindow */
 +        }
-+        if (commit) {
-+            wl_surface_commit(wind->surface);
-+        }
++
++        wl_surface_commit(wind->surface);
++
 +        if (output) {
 +            wl_shell_surface_set_fullscreen(wind->shell_surface.wl,
 +                                            WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
@@ -149,7 +151,7 @@ index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b
      }
  }
  
-@@ -491,6 +505,62 @@ static const struct wl_callback_listener gles_swap_frame_listener = {
+@@ -536,6 +550,62 @@ static const struct wl_callback_listener gles_swap_frame_listener = {
  
  static void Wayland_HandleResize(SDL_Window *window, int width, int height, float scale);
  
@@ -209,10 +211,10 @@ index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b
 +    handle_popup_done_wl_shell_surface
 +};
 +
- static void
- handle_configure_xdg_shell_surface(void *data, struct xdg_surface *xdg, uint32_t serial)
+ static void handle_configure_xdg_shell_surface(void *data, struct xdg_surface *xdg, uint32_t serial)
  {
-@@ -1273,6 +1343,11 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
+     SDL_WindowData *wind = (SDL_WindowData *)data;
+@@ -1390,6 +1460,11 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
              xdg_toplevel_set_app_id(data->shell_surface.xdg.roleobj.toplevel, c->classname);
              xdg_toplevel_add_listener(data->shell_surface.xdg.roleobj.toplevel, &toplevel_listener_xdg, data);
          }
@@ -224,7 +226,7 @@ index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b
      }
  
      /* Restore state that was set prior to this call */
-@@ -1432,6 +1507,11 @@ void Wayland_HideWindow(_THIS, SDL_Window *window)
+@@ -1565,6 +1640,11 @@ void Wayland_HideWindow(_THIS, SDL_Window *window)
              xdg_surface_destroy(wind->shell_surface.xdg.surface);
              wind->shell_surface.xdg.surface = NULL;
          }
@@ -236,19 +238,19 @@ index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b
      }
  
      /*
-@@ -1667,6 +1747,11 @@ Wayland_RestoreWindow(_THIS, SDL_Window * window)
-             return; /* Can't do anything yet, wait for ShowWindow */
+@@ -1845,6 +1925,11 @@ Wayland_RestoreWindow(_THIS, SDL_Window * window)
+                 return; /* Can't do anything yet, wait for ShowWindow */
+             }
+             xdg_toplevel_unset_maximized(wind->shell_surface.xdg.roleobj.toplevel);
++        } else {
++            if (wind->shell_surface.wl == NULL) {
++                return; /* Can't do anything yet, wait for ShowWindow */
++            }
++            wl_shell_surface_set_toplevel(wind->shell_surface.wl);
          }
-         xdg_toplevel_unset_maximized(wind->shell_surface.xdg.roleobj.toplevel);
-+    } else {
-+        if (wind->shell_surface.wl == NULL) {
-+            return; /* Can't do anything yet, wait for ShowWindow */
-+        }
-+        wl_shell_surface_set_toplevel(wind->shell_surface.wl);
-     }
  
-     WAYLAND_wl_display_flush( viddata->display );
-@@ -1749,6 +1834,11 @@ Wayland_MaximizeWindow(_THIS, SDL_Window * window)
+     WAYLAND_wl_display_roundtrip(viddata->display);
+@@ -1924,6 +2009,11 @@ Wayland_MaximizeWindow(_THIS, SDL_Window * window)
              return; /* Can't do anything yet, wait for ShowWindow */
          }
          xdg_toplevel_set_maximized(wind->shell_surface.xdg.roleobj.toplevel);
@@ -259,8 +261,8 @@ index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b
 +        wl_shell_surface_set_maximized(wind->shell_surface.wl, NULL);
      }
  
-     WAYLAND_wl_display_flush(viddata->display);
-@@ -2090,6 +2180,11 @@ void Wayland_SetWindowTitle(_THIS, SDL_Window * window)
+     WAYLAND_wl_display_roundtrip(viddata->display);
+@@ -2232,6 +2322,11 @@ void Wayland_SetWindowTitle(_THIS, SDL_Window * window)
              return; /* Can't do anything yet, wait for ShowWindow */
          }
          xdg_toplevel_set_title(wind->shell_surface.xdg.roleobj.toplevel, title);
@@ -273,7 +275,7 @@ index 8d5c7023456de826d75f47265ab7d8d98af6b5dd..314a3576621629c9b595ae110315176b
  
      WAYLAND_wl_display_flush(viddata->display);
 diff --git a/src/video/wayland/SDL_waylandwindow.h b/src/video/wayland/SDL_waylandwindow.h
-index 703ec53da45710cec1df6f9b8eca5cd2b2f87271..2197a5d6772b0fbd31d36be7dfeaf5b1baa22f65 100644
+index 0d36a3056ff7ba4a5240f4aa52afbfef349cf1f2..4f395117a1fca3d6c3049ff768449c6aa1310af9 100644
 --- a/src/video/wayland/SDL_waylandwindow.h
 +++ b/src/video/wayland/SDL_waylandwindow.h
 @@ -67,6 +67,7 @@ typedef struct {
@@ -282,5 +284,5 @@ index 703ec53da45710cec1df6f9b8eca5cd2b2f87271..2197a5d6772b0fbd31d36be7dfeaf5b1
          } xdg;
 +        struct wl_shell_surface *wl;
      } shell_surface;
-     enum {
-         WAYLAND_SURFACE_UNKNOWN = 0,
+     enum
+     {

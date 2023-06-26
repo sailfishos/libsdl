@@ -3,7 +3,7 @@
 
 Summary: Simple DirectMedia Layer 2
 Name: SDL2
-Version: 2.24.0
+Version: 2.28.0
 Release: 1
 Source: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
@@ -49,6 +49,7 @@ pushd build
 %cmake .. \
   -DLIB_SUFFIX="" \
   -DPULSEAUDIO=ON \
+  -DSDL_RPATH=OFF \
   -DSDL_STATIC=ON \
   -DVIDEO_WAYLAND=ON \
   -DVIDEO_X11=OFF \
