@@ -1,9 +1,11 @@
+%undefine __cmake_in_source_build
+
 # cmake of SDL requires static libs to exist
 %define keepstatic 1
 
 Summary: Simple DirectMedia Layer 2
 Name: SDL2
-Version: 2.28.0
+Version: 2.30.0
 Release: 1
 Source: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
@@ -21,6 +23,7 @@ BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
 Patch0: 0001-wayland-Bring-back-wl_shell-support.patch
+Patch1: 0002-Revert-Fixed-a-memory-leak-at-window-creation.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
@@ -44,9 +47,7 @@ to develop SDL applications.
 %autosetup -p1 -n %{name}-%{version}/%{name}
 
 %build
-mkdir -p build
-pushd build
-%cmake .. \
+%cmake \
   -DLIB_SUFFIX="" \
   -DPULSEAUDIO=ON \
   -DSDL_RPATH=OFF \
@@ -54,19 +55,15 @@ pushd build
   -DVIDEO_WAYLAND=ON \
   -DVIDEO_X11=OFF \
   -DWAYLAND_LIBDECOR=OFF
-popd
+%cmake_build
 
 %install
-pushd build
-%make_install
+%cmake_install
 rm -f %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.txt
-popd
 
-%post
-/sbin/ldconfig
+%post -p /sbin/ldconfig
 
-%postun
-/sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 %files
 %defattr(-,root,root,-)
