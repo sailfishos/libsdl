@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Frank Praznik <frank.praznik@gmail.com>
+Date: Wed, 14 Feb 2024 10:51:09 -0500
+Subject: [PATCH] wayland: Don't store wl_output pointers in mode driver data
+
+They aren't used for anything, and cause problems if the video core tries to free them.
+
+Manual backport of f9ba0e1
+
+(cherry picked from commit 699cec1a8db88c621f4378764614ba589c3ace11)
+---
+ src/video/wayland/SDL_waylandvideo.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
+
+diff --git a/src/video/wayland/SDL_waylandvideo.c b/src/video/wayland/SDL_waylandvideo.c
+index 70e9d7306a8fcc60a4b8b1a9289c18f88a8de990..f1029addd385cc73a8ff4d0d67488a2782ae61a0 100644
+--- a/src/video/wayland/SDL_waylandvideo.c
++++ b/src/video/wayland/SDL_waylandvideo.c
+@@ -478,17 +478,8 @@ static void display_handle_geometry(void *data,
+ 
+ {
+     SDL_WaylandOutputData *driverdata = data;
+-    SDL_VideoDisplay *display;
+-    int i;
+ 
+     if (driverdata->wl_output_done_count) {
+-        /* Clear the wl_output ref so Reset doesn't free it */
+-        display = SDL_GetDisplay(driverdata->index);
+-        for (i = 0; i < display->num_display_modes; i += 1) {
+-            display->display_modes[i].driverdata = NULL;
+-        }
+-
+-        /* Okay, now it's safe to reset */
+         SDL_ResetDisplayModes(driverdata->index);
+ 
+         /* The display has officially started over. */
+@@ -600,7 +591,6 @@ static void display_handle_done(void *data,
+         native_mode.h = driverdata->native_height;
+     }
+     native_mode.refresh_rate = (int)SDL_round(driverdata->refresh / 1000.0); /* mHz to Hz */
+-    native_mode.driverdata = driverdata->output;
+ 
+     /* The scaled desktop mode */
+     SDL_zero(desktop_mode);
+@@ -622,7 +612,6 @@ static void display_handle_done(void *data,
+         desktop_mode.h = driverdata->width;
+     }
+     desktop_mode.refresh_rate = (int)SDL_round(driverdata->refresh / 1000.0); /* mHz to Hz */
+-    desktop_mode.driverdata = driverdata->output;
+ 
+     /*
+      * The native display mode is only exposed separately from the desktop size if the
+@@ -1016,7 +1005,7 @@ static int Wayland_GetDisplayDPI(_THIS, SDL_VideoDisplay *sdl_display, float *dd
+ static void Wayland_VideoCleanup(_THIS)
+ {
+     SDL_VideoData *data = _this->driverdata;
+-    int i, j;
++    int i;
+ 
+     Wayland_QuitWin(data);
+     Wayland_FiniMouse(data);
+@@ -1032,10 +1021,6 @@ static void Wayland_VideoCleanup(_THIS)
+         SDL_free(display->driverdata);
+         display->driverdata = NULL;
+ 
+-        for (j = display->num_display_modes; j--;) {
+-            display->display_modes[j].driverdata = NULL;
+-        }
+-        display->desktop_mode.driverdata = NULL;
+         SDL_DelVideoDisplay(i);
+     }
+     data->output_list = NULL;

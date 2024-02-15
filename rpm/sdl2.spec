@@ -23,7 +23,7 @@ BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
 Patch0: 0001-wayland-Bring-back-wl_shell-support.patch
-Patch1: 0002-Revert-Fixed-a-memory-leak-at-window-creation.patch
+Patch1: 0002-wayland-Don-t-store-wl_output-pointers-in-mode-drive.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
