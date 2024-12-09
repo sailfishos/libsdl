@@ -46,10 +46,10 @@ index 6feb343912b15a6a9360a11b66a08c0c4e36f882..2c93149cd2dcbff5a69c20606c028aa1
  #define wl_data_device_interface         (*WAYLAND_wl_data_device_interface)
  #define wl_data_offer_interface          (*WAYLAND_wl_data_offer_interface)
 diff --git a/src/video/wayland/SDL_waylandevents.c b/src/video/wayland/SDL_waylandevents.c
-index a8382812ab149c4377441d46a693f736f5430cad..45d679abdafb94708e478745d4f1db57922c37b7 100644
+index dc34cfeef3a0d0d411f24ef9419bbb2379cd84c9..16afdc0475c48fb9d2fb893213afc3df9e0e0dc2 100644
 --- a/src/video/wayland/SDL_waylandevents.c
 +++ b/src/video/wayland/SDL_waylandevents.c
-@@ -518,6 +518,10 @@ static SDL_bool ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
+@@ -531,6 +531,10 @@ static SDL_bool ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
                                        input->seat,
                                        serial);
                  }
@@ -60,7 +60,7 @@ index a8382812ab149c4377441d46a693f736f5430cad..45d679abdafb94708e478745d4f1db57
              }
              return SDL_TRUE;
  
-@@ -543,6 +547,10 @@ static SDL_bool ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
+@@ -556,6 +560,10 @@ static SDL_bool ProcessHitTest(struct SDL_WaylandInput *input, uint32_t serial)
                                          serial,
                                          directions[rc - SDL_HITTEST_RESIZE_TOPLEFT]);
                  }
@@ -90,10 +90,10 @@ index 1b02b01c6691bd2df30508ab88bbd990586594d0..27ff34a31a77c970300790697204594d
  SDL_WAYLAND_INTERFACE(wl_data_device_interface)
  SDL_WAYLAND_INTERFACE(wl_data_source_interface)
 diff --git a/src/video/wayland/SDL_waylandvideo.c b/src/video/wayland/SDL_waylandvideo.c
-index 2cae471792cd692129f193fac2100d7d98ab6705..70e9d7306a8fcc60a4b8b1a9289c18f88a8de990 100644
+index 9f7960aa2aa032160a598c6a4636f713bdbe1244..90625b88e975f6f193369fcc029c851beee8740b 100644
 --- a/src/video/wayland/SDL_waylandvideo.c
 +++ b/src/video/wayland/SDL_waylandvideo.c
-@@ -846,6 +846,8 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
+@@ -839,6 +839,8 @@ static void display_handle_global(void *data, struct wl_registry *registry, uint
      } else if (SDL_strcmp(interface, "xdg_wm_base") == 0) {
          d->shell.xdg = wl_registry_bind(d->registry, id, &xdg_wm_base_interface, SDL_min(version, 3));
          xdg_wm_base_add_listener(d->shell.xdg, &shell_listener_xdg, NULL);
@@ -102,7 +102,7 @@ index 2cae471792cd692129f193fac2100d7d98ab6705..70e9d7306a8fcc60a4b8b1a9289c18f8
      } else if (SDL_strcmp(interface, "wl_shm") == 0) {
          d->shm = wl_registry_bind(registry, id, &wl_shm_interface, 1);
      } else if (SDL_strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) {
-@@ -1097,6 +1099,11 @@ static void Wayland_VideoCleanup(_THIS)
+@@ -1083,6 +1085,11 @@ static void Wayland_VideoCleanup(_THIS)
          data->shm = NULL;
      }
  
@@ -127,10 +127,10 @@ index b7b3348c6d4d9285971d5a2416f7d123f303c7f8..e57ab2bd21a3064c257d704b4912c22d
          struct libdecor *libdecor;
  #endif
 diff --git a/src/video/wayland/SDL_waylandwindow.c b/src/video/wayland/SDL_waylandwindow.c
-index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7f6e3d289 100644
+index 18a6b144b014218c7934ba3dc510adc5237a6cca..58f74bfa629884c088cc65efcfedc7b941c9f18c 100644
 --- a/src/video/wayland/SDL_waylandwindow.c
 +++ b/src/video/wayland/SDL_waylandwindow.c
-@@ -446,6 +446,20 @@ static void SetFullscreen(SDL_Window *window, struct wl_output *output)
+@@ -383,6 +383,20 @@ static void SetFullscreen(SDL_Window *window, struct wl_output *output)
          } else {
              xdg_toplevel_unset_fullscreen(wind->shell_surface.xdg.roleobj.toplevel);
          }
@@ -151,7 +151,7 @@ index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7
      }
  }
  
-@@ -541,6 +555,62 @@ static const struct wl_callback_listener gles_swap_frame_listener = {
+@@ -478,6 +492,62 @@ static const struct wl_callback_listener gles_swap_frame_listener = {
  
  static void Wayland_HandleResize(SDL_Window *window, int width, int height, float scale);
  
@@ -214,9 +214,9 @@ index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7
  static void handle_configure_xdg_shell_surface(void *data, struct xdg_surface *xdg, uint32_t serial)
  {
      SDL_WindowData *wind = (SDL_WindowData *)data;
-@@ -1374,6 +1444,11 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
-             xdg_toplevel_set_app_id(data->shell_surface.xdg.roleobj.toplevel, c->classname);
-             xdg_toplevel_add_listener(data->shell_surface.xdg.roleobj.toplevel, &toplevel_listener_xdg, data);
+@@ -1313,6 +1383,11 @@ void Wayland_ShowWindow(_THIS, SDL_Window *window)
+ 
+             SetMinMaxDimensions(window, SDL_FALSE);
          }
 +    } else {
 +        data->shell_surface.wl = wl_shell_get_shell_surface(c->shell.wl, data->surface);
@@ -226,7 +226,7 @@ index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7
      }
  
      /* Restore state that was set prior to this call */
-@@ -1549,6 +1624,11 @@ void Wayland_HideWindow(_THIS, SDL_Window *window)
+@@ -1488,6 +1563,11 @@ void Wayland_HideWindow(_THIS, SDL_Window *window)
              xdg_surface_destroy(wind->shell_surface.xdg.surface);
              wind->shell_surface.xdg.surface = NULL;
          }
@@ -238,7 +238,7 @@ index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7
      }
  
      /*
-@@ -1829,6 +1909,11 @@ void Wayland_RestoreWindow(_THIS, SDL_Window *window)
+@@ -1768,6 +1848,11 @@ void Wayland_RestoreWindow(_THIS, SDL_Window *window)
                  return; /* Can't do anything yet, wait for ShowWindow */
              }
              xdg_toplevel_unset_maximized(wind->shell_surface.xdg.roleobj.toplevel);
@@ -250,7 +250,7 @@ index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7
          }
  
      WAYLAND_wl_display_roundtrip(viddata->display);
-@@ -1908,6 +1993,11 @@ void Wayland_MaximizeWindow(_THIS, SDL_Window *window)
+@@ -1847,6 +1932,11 @@ void Wayland_MaximizeWindow(_THIS, SDL_Window *window)
              return; /* Can't do anything yet, wait for ShowWindow */
          }
          xdg_toplevel_set_maximized(wind->shell_surface.xdg.roleobj.toplevel);
@@ -262,7 +262,7 @@ index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7
      }
  
      WAYLAND_wl_display_roundtrip(viddata->display);
-@@ -2209,6 +2299,11 @@ void Wayland_SetWindowTitle(_THIS, SDL_Window *window)
+@@ -2161,6 +2251,11 @@ void Wayland_SetWindowTitle(_THIS, SDL_Window *window)
              return; /* Can't do anything yet, wait for ShowWindow */
          }
          xdg_toplevel_set_title(wind->shell_surface.xdg.roleobj.toplevel, title);
@@ -275,7 +275,7 @@ index 08df3638c2e795ecdf4cd5f4972bd5d4f866653d..4cb20afbda9aef1edad59b3cf2bd73a7
  
      WAYLAND_wl_display_flush(viddata->display);
 diff --git a/src/video/wayland/SDL_waylandwindow.h b/src/video/wayland/SDL_waylandwindow.h
-index 36600a4d2783e5205d0e1d2faf8422b54e1f7848..0951126949879d863cde175684a3605367428824 100644
+index e22e6baa64dd4487d871df288cd7e5d17d6f5f77..2a28a467fe6d72d8ea9e223796d4469c5db23abf 100644
 --- a/src/video/wayland/SDL_waylandwindow.h
 +++ b/src/video/wayland/SDL_waylandwindow.h
 @@ -67,6 +67,7 @@ typedef struct

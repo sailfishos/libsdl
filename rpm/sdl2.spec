@@ -5,7 +5,7 @@
 
 Summary: Simple DirectMedia Layer 2
 Name: SDL2
-Version: 2.30.0
+Version: 2.30.10
 Release: 1
 Source: %{name}-%{version}.tar.gz
 URL: http://www.libsdl.org/
@@ -23,7 +23,6 @@ BuildRequires: pkgconfig(xkbcommon)
 BuildRequires: pkgconfig(libpulse-simple)
 
 Patch0: 0001-wayland-Bring-back-wl_shell-support.patch
-Patch1: 0002-wayland-Don-t-store-wl_output-pointers-in-mode-drive.patch
 
 %description
 This is the Simple DirectMedia Layer, a generic API that provides low
@@ -66,12 +65,10 @@ rm -f %{buildroot}%{_datadir}/licenses/%{name}/LICENSE.txt
 %postun -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
 %license LICENSE.txt
 %{_libdir}/lib*.so.*
 
 %files devel
-%defattr(-,root,root,-)
 %{_bindir}/*-config
 %{_libdir}/lib*.a
 %{_libdir}/lib*.so
